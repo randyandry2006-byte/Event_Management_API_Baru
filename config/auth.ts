@@ -6,7 +6,7 @@ const authConfig = defineConfig({
   guards: {
     api: tokensGuard({
       provider: tokensUserProvider({
-        tokens: 'accessTokens',  // PASTIKAN NAMA INI SESUAI
+        tokens: 'accessTokens',
         model: () => import('#models/user')
       })
     })

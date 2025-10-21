@@ -2,7 +2,6 @@ import Participant from '#models/participant'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class ParticipantsController {
-  // METHOD STANDARD CRUD
   async index({ response }: HttpContext) {
     const participants = await Participant.all()
     return response.ok(participants)
@@ -16,7 +15,6 @@ export default class ParticipantsController {
 
  async destroy({ params, response }: HttpContext) {
     try {
-      // GUNAKAN find() DENGAN HANDLING MANUAL
       const participant = await Participant.find(params.id)
       if (!participant) {
         return response.notFound({ message: 'Participant tidak ditemukan' })
@@ -29,7 +27,6 @@ export default class ParticipantsController {
     }
   }
   
-  // GET BY ID
   async show({ params, response }: HttpContext) {
     try {
       const participant = await Participant.findOrFail(params.id)
@@ -39,9 +36,6 @@ export default class ParticipantsController {
     }
   }
 
-  // CUSTOM METHODS
-  
-  // GET /participants/search/:name
   async searchByName({ params, response }: HttpContext) {
     const participants = await Participant.query()
       .where('name', 'like', `%${params.name}%`)

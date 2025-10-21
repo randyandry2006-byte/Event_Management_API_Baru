@@ -21,7 +21,6 @@ export default class extends BaseSchema {
         .inTable('participants')
         .onDelete('CASCADE')
 
-      // GUNAKAN datetime DARIPADA timestamp
       table.datetime('created_at').notNullable().defaultTo(this.now())
       table.datetime('updated_at').notNullable().defaultTo(this.now())
     })

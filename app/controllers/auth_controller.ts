@@ -36,12 +36,10 @@ export default class AuthController {
   }
 
   async logout({ response }: HttpContext) {
-    // Simple logout tanpa auth object
     return response.ok({ message: 'Logout berhasil' })
   }
 
   async profile({ response }: HttpContext) {
-    // Simple profile tanpa auth
     return response.ok({ message: 'Profile endpoint' })
   }
 }

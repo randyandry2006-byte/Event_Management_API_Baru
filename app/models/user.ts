@@ -22,7 +22,6 @@ export default class User extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  // Hash password
   @beforeSave()
   static async hashPassword(user: User) {
     if (user.$dirty.password) {
@@ -30,7 +29,6 @@ export default class User extends BaseModel {
     }
   }
 
-  // Verify credentials method
   static async verifyCredentials(email: string, password: string) {
     const user = await this.findBy('email', email)
     if (!user) {
@@ -41,7 +39,6 @@ export default class User extends BaseModel {
     return isPasswordValid ? user : null
   }
 
-  // Access tokens provider - PASTIKAN ADA INI
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     expiresIn: '30 days',
   })

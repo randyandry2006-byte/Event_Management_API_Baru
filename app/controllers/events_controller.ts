@@ -2,7 +2,6 @@ import Event from '#models/event'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class EventsController {
-  // METHOD STANDARD CRUD
   async index({ response }: HttpContext) {
     const events = await Event.all()
     return response.ok(events)
@@ -14,7 +13,6 @@ export default class EventsController {
     return response.created(event)
   }
 
-  // GET BY ID
   async show({ params, response }: HttpContext) {
     try {
       const event = await Event.findOrFail(params.id)
@@ -38,9 +36,6 @@ export default class EventsController {
     return response.ok({ message: 'Event deleted successfully' })
   }
 
-  // CUSTOM METHODS UNTUK DATA SPESIFIK
-  
-  // GET /events/location/:location
   async byLocation({ params, response }: HttpContext) {
     const events = await Event.query()
       .where('location', params.location)
@@ -49,7 +44,6 @@ export default class EventsController {
     return response.ok(events)
   }
 
-  // GET /events/date/:startDate/:endDate
   async byDateRange({ params, response }: HttpContext) {
     const events = await Event.query()
       .whereBetween('date', [params.startDate, params.endDate])

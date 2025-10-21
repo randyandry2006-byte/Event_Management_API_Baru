@@ -19,12 +19,10 @@ router.get('/', async () => {
   }
 })
 
-// Basic CRUD routes dengan import langsung
 router.resource('events', EventsController).apiOnly()
 router.resource('participants', ParticipantsController).apiOnly()
 router.resource('registrations', RegistrationsController).apiOnly()
 
-// CUSTOM ROUTES dengan import langsung
 router.get('/events/location/:location', [EventsController, 'byLocation'])
 router.get('/events/date/:startDate/:endDate', [EventsController, 'byDateRange'])
 router.get('/participants/search/:name', [ParticipantsController, 'searchByName'])
@@ -32,7 +30,6 @@ router.get('/registrations/event/:eventId/status/:status', [RegistrationsControl
 router.get('/registrations/event/:eventId', [RegistrationsController, 'byEvent'])
 router.get('/registrations/participant/:participantId', [RegistrationsController, 'byParticipant'])
 
-// Auth routes - GUNAKAN FORMAT YANG LEBIH SIMPLE
 router.post('/register', async ({ request, response }) => {
   const User = (await import('#models/user')).default
   const data = request.only(['name', 'email', 'password'])

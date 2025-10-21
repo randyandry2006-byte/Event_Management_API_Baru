@@ -10,7 +10,6 @@ export default class extends BaseSchema {
       table.string('email').notNullable().unique()
       table.string('password').notNullable()
       
-      // PASTIKAN GUNAKAN datetime BUKAN timestamp
       table.datetime('created_at').notNullable().defaultTo(this.now())
       table.datetime('updated_at').notNullable().defaultTo(this.now())
     })
