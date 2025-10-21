@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-calendar-alt"></i> <span>EventManager</span></h2>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="#" class="active" data-target="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="tambah-event">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Tambah Event</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="registrasi">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Registrasi</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="participant">
+                        <i class="fas fa-users"></i>
+                        <span>Participant</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="login-prompt" id="loginPrompt">
+                <a href="login.html" class="login-btn" id="openLogin">Login</a>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="content">
+                <section id="dashboard" class="content-section active">
+                    <h2>Dashboard</h2>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Events</h3>
+                                <p class="stat-number">12</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Participants</h3>
+                                <p class="stat-number">245</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Events Completed</h3>
+                                <p class="stat-number">8</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Upcoming Events</h3>
+                                <p class="stat-number">4</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="recent-events">
+                        <h3>Recent Events</h3>
+                        <div class="event-list">
+                            <div class="event-item">
+                                <h4>17an</h4>
+                                <p>17 Agustus 2025</p>
+                                <span class="status upcoming">Upcoming</span>
+                            </div>
+                            <div class="event-item">
+                                <h4>Puisi</h4>
+                                <p>15 Oktober 2025</p>
+                                <span class="status completed">Completed</span>
+                            </div>
+                            <div class="event-item">
+                                <h4>Nyanyi</h4>
+                                <p>5 Oktober 2025</p>
+                                <span class="status completed">Completed</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tambah-event" class="content-section">
+                    <h2>Tambah Event Baru</h2>
+                    <form class="event-form">
+                        <div class="form-group">
+                            <label for="event-name">Nama Event</label>
+                            <input type="text" id="event-name" placeholder="Masukkan nama event">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-date">Tanggal Event</label>
+                            <input type="date" id="event-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-time">Waktu Event</label>
+                            <input type="time" id="event-time">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-location">Lokasi</label>
+                            <input type="text" id="event-location" placeholder="Masukkan lokasi event">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-description">Deskripsi Event</label>
+                            <textarea id="event-description" placeholder="Deskripsikan event Anda" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-capacity">Kapasitas Peserta</label>
+                            <input type="number" id="event-capacity" placeholder="Jumlah maksimal peserta">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-category">Kategori Event</label>
+                            <select id="event-category">
+                                <option value="">Pilih kategori</option>
+                                <option value="conference">Conference</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="seminar">Seminar</option>
+                                <option value="networking">Networking</option>
+                                <option value="lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Simpan Event</button>
+                            <button type="reset" class="btn-secondary">Reset Form</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="registrasi" class="content-section">
+                    <h2>Registrasi Peserta</h2>
+                    <div class="registration-container">
+                        <div class="registration-form">
+                            <h3>Form Registrasi</h3>
+                            <form>
+                                <div class="form-group">
+                                    <label for="participant-name">Nama Lengkap</label>
+                                    <input type="text" id="participant-name" placeholder="Masukkan nama lengkap">
+                                </div>
+                                <div class="form-group">
+                                    <label for="participant-email">Email</label>
+                                    <input type="email" id="participant-email" placeholder="Masukkan alamat email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="participant-phone">Nomor Telepon</label>
+                                    <input type="tel" id="participant-phone" placeholder="Masukkan nomor telepon">
+                                </div>
+                                <div class="form-group">
+                                    <label for="participant-event">Pilih Event</label>
+                                    <select id="participant-event">
+                                        <option value="">Pilih event</option>
+                                        <option value="tech-conference">17an</option>
+                                        <option value="marketing-workshop">puisi</option>
+                                        <option value="product-launch">Nyanyi</option>
+                                        <option value="design-seminar">Design Seminar</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="participant-company">Perusahaan/Institusi</label>
+                                    <input type="text" id="participant-company" placeholder="Masukkan nama perusahaan">
+                                </div>
+                                <div class="form-group">
+                                    <label for="participant-position">Jabatan</label>
+                                    <input type="text" id="participant-position" placeholder="Masukkan jabatan">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">Daftar Sekarang</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="registration-info">
+                            <h3>Informasi Registrasi</h3>
+                            <div class="info-card">
+                                <h4>Penting!</h4>
+                                <ul>
+                                    <li>Pastikan data yang diisi sudah benar</li>
+                                    <li>Konfirmasi akan dikirim melalui email</li>
+                                    <li>Batalkan registrasi maksimal 24 jam sebelum event</li>
+                                    <li>Bawa bukti registrasi saat menghadiri event</li>
+                                </ul>
+                            </div>
+                            <div class="info-card">
+                                <h4>Kontak Bantuan</h4>
+                                <p>Jika mengalami kendala dalam registrasi, hubungi:</p>
+                                <p><i class="fas fa-envelope"></i> support@eventmanager.com</p>
+                                <p><i class="fas fa-phone"></i> +62 21 1234 5678</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="participant" class="content-section">
+                    <h2>Manajemen Participant</h2>
+                    <div class="participant-controls">
+                        <div class="search-box">
+                            <input type="text" placeholder="Cari participant...">
+                            <button><i class="fas fa-search"></i></button>
+                        </div>
+                        <div class="filter-options">
+                            <select>
+                                <option value="">Semua Event</option>
+                                <option value="tech-conference">17an</option>
+                                <option value="marketing-workshop">Puisi</option>
+                                <option value="product-launch">Nyanyi</option>
+                                <option value="product-launch">Design Seminar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="participant-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>Telepon</th>
+                                    <th>Event</th>
+                                    <th>Tanggal Daftar</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Hadid</td>
+                                    <td>hadid@email.com</td>
+                                    <td>08123456789</td>
+                                    <td>17an</td>
+                                    <td>10 Agustus 2025</td>
+                                    <td><span class="status confirmed">Terkonfirmasi</span></td>
+                                    <td>
+                                        <button class="btn-action"><i class="fas fa-edit"></i></button>
+                                        <button class="btn-action"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Galank</td>
+                                    <td>galank@email.com</td>
+                                    <td>08234567890</td>
+                                    <td>17an</td>
+                                    <td>10 Agustus 2025</td>
+                                    <td><span class="status confirmed">Terkonfirmasi</span></td>
+                                    <td>
+                                        <button class="btn-action"><i class="fas fa-edit"></i></button>
+                                        <button class="btn-action"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Nabil</td>
+                                    <td>nabil@email.com</td>
+                                    <td>08345678901</td>
+                                    <td>17an</td>
+                                    <td>5 Agustus 2025</td>
+                                    <td><span class="status pending">Menunggu</span></td>
+                                    <td>
+                                        <button class="btn-action"><i class="fas fa-edit"></i></button>
+                                        <button class="btn-action"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Randy</td>
+                                    <td>randy@email.com</td>
+                                    <td>08456789012</td>
+                                    <td>17an</td>
+                                    <td>12 Agustus 2025</td>
+                                    <td><span class="status confirmed">Terkonfirmasi</span></td>
+                                    <td>
+                                        <button class="btn-action"><i class="fas fa-edit"></i></button>
+                                        <button class="btn-action"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                        <span class="page-number">1</span>
+                        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

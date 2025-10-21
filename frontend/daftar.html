@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="daftar.css">
+    <title>Daftar - Event Management</title>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1>Buat Akun Baru</h1>
+            <p>Daftar untuk mulai mengelola event Anda</p>
+        </div>
+        
+        <form id="registerForm">
+            <div class="name-row">
+                <div class="form-group">
+                    <label for="firstName">Nama Depan</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="Masukkan nama depan" required>
+                    <div class="error-message" id="firstNameError">Nama depan harus diisi</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Nama Belakang</label>
+                    <input type="text" id="lastName" name="lastName" placeholder="Masukkan nama belakang" required>
+                    <div class="error-message" id="lastNameError">Nama belakang harus diisi</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Masukkan email Anda" required>
+                <div class="error-message" id="emailError">Format email tidak valid</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Nomor Telepon</label>
+                <input type="tel" id="phone" name="phone" placeholder="Masukkan nomor telepon" required>
+                <div class="error-message" id="phoneError">Nomor telepon harus diisi</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="userType">Jenis Pengguna</label>
+                <select id="userType" name="userType" required>
+                    <option value="" disabled selected>Pilih jenis pengguna</option>
+                    <option value="organizer">Penyelenggara Event</option>
+                    <option value="participant">Peserta Event</option>
+                    <option value="both">Keduanya</option>
+                </select>
+                <div class="error-message" id="userTypeError">Pilih jenis pengguna</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Kata Sandi</label>
+                <input type="password" id="password" name="password" placeholder="Buat kata sandi" required>
+                <div class="password-requirements">Minimal 8 karakter, mengandung huruf besar, kecil, dan angka</div>
+                <div class="error-message" id="passwordError">Kata sandi tidak memenuhi persyaratan</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Konfirmasi Kata Sandi</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Ulangi kata sandi" required>
+                <div class="error-message" id="confirmPasswordError">Kata sandi tidak cocok</div>
+            </div>
+            
+            <div class="terms-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">Saya setuju dengan <a href="#">Syarat dan Ketentuan</a> serta <a href="#">Kebijakan Privasi</a></label>
+            </div>
+            <div class="error-message" id="termsError">Anda harus menyetujui syarat dan ketentuan</div>
+            
+            <button type="submit" class="register-button">Daftar</button>
+        </form>
+        
+        <div class="login-option">
+            <p>Sudah punya akun?</p>
+            <a href="index.html" class="login-button">Masuk ke Akun</a>
+        </div>
+    </div>
+
+    <script src="daftar.js"></script>
+</body>
+</html>

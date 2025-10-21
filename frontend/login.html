@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="login.css">
+    <title>Login - Event Management</title>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Masuk ke Akun Anda</h1>
+            <p>Kelola event Anda dengan mudah</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Masukkan email Anda" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Kata Sandi</label>
+                <input type="password" id="password" name="password" placeholder="Masukkan kata sandi" required>
+            </div>
+            
+            <div class="additional-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Ingat saya</label>
+                </div>
+                <a href="#" class="forgot-password">Lupa kata sandi?</a>
+            </div>
+            
+            <button type="submit" class="login-button">Masuk</button>
+        </form>
+        
+        <div class="register-option">
+            <p>Belum punya akun?</p>
+            <a href="daftar.html" class="register-button">Buat Akun Baru</a>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
