@@ -26,7 +26,6 @@ router.resource('registrations', RegistrationsController).apiOnly()
 router.get('/events/location/:location', [EventsController, 'byLocation'])
 router.get('/events/date/:startDate/:endDate', [EventsController, 'byDateRange'])
 router.get('/participants/search/:name', [ParticipantsController, 'searchByName'])
-router.get('/registrations/event/:eventId/status/:status', [RegistrationsController, 'byEventAndStatus'])
 router.get('/registrations/event/:eventId', [RegistrationsController, 'byEvent'])
 router.get('/registrations/participant/:participantId', [RegistrationsController, 'byParticipant'])
 
