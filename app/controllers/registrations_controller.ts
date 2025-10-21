@@ -53,14 +53,4 @@ export default class RegistrationsController {
     
     return response.ok(registrations)
   }
-
-  async byEventAndStatus({ params, response }: HttpContext) {
-    const registrations = await Registration.query()
-      .where('event_id', params.eventId)
-      .where('status', params.status)
-      .preload('event')
-      .preload('participant')
-    
-    return response.ok(registrations)
-  }
 }
