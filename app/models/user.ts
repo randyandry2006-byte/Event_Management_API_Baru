@@ -13,6 +13,9 @@ export default class User extends BaseModel {
   @column()
   declare email: string
 
+  @column()
+  declare role: 'admin' | 'manager' | 'user'   // type union tetap aman
+
   @column({ serializeAs: null })
   declare password: string
 
@@ -31,15 +34,14 @@ export default class User extends BaseModel {
 
   static async verifyCredentials(email: string, password: string) {
     const user = await this.findBy('email', email)
-    if (!user) {
-      return null
-    }
-    
+    if (!user) return null
+
     const isPasswordValid = await hash.verify(user.password, password)
     return isPasswordValid ? user : null
   }
 
+  // TOKEN API (30 hari)
   static accessTokens = DbAccessTokensProvider.forModel(User, {
-    expiresIn: '30 days',
+    expiresIn: 1000 * 60 * 60 * 24 * 30   // 30 days in ms
   })
 }

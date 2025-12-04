@@ -15,7 +15,10 @@ export default class Registration extends BaseModel {
   declare participantId: number
 
   @column.dateTime()
-  declare registeredAt: DateTime
+  declare registered_At: DateTime
+
+  @column()
+  declare status: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

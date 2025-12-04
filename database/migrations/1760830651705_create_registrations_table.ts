@@ -20,6 +20,9 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('participants')
         .onDelete('CASCADE')
+      
+      table.dateTime('registered_At').nullable()
+      table.string('status').defaultTo('pending')
 
       table.datetime('created_at').notNullable().defaultTo(this.now())
       table.datetime('updated_at').notNullable().defaultTo(this.now())

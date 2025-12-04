@@ -1,63 +1,96 @@
+import router from '@adonisjs/core/services/router'
+import { middleware } from '#start/kernel'
+
 /*
 |--------------------------------------------------------------------------
-| Routes file
+| PUBLIC ROUTES
 |--------------------------------------------------------------------------
-|
-| The routes file is used for defining the HTTP routes.
-|
 */
-
-import router from '@adonisjs/core/services/router'
-import EventsController from '#controllers/events_controller'
-import ParticipantsController from '#controllers/participants_controller'
-import RegistrationsController from '#controllers/registrations_controller'
-
-// Default route
 router.get('/', async () => {
   return { 
-    message: 'Welcome to Event Management API!' 
+    message: 'Event Management API',
+    version: '1.0.0',
+    status: 'running'
   }
 })
 
-router.resource('events', EventsController).apiOnly()
-router.resource('participants', ParticipantsController).apiOnly()
-router.resource('registrations', RegistrationsController).apiOnly()
+router.post('/register', '#controllers/auth_controller.register')
+router.post('/login', '#controllers/auth_controller.login')
+router.post('/logout', '#controllers/auth_controller.logout').use(middleware.auth())
 
-router.get('/events/location/:location', [EventsController, 'byLocation'])
-router.get('/events/date/:startDate/:endDate', [EventsController, 'byDateRange'])
-router.get('/participants/search/:name', [ParticipantsController, 'searchByName'])
-router.get('/registrations/event/:eventId', [RegistrationsController, 'byEvent'])
-router.get('/registrations/participant/:participantId', [RegistrationsController, 'byParticipant'])
-
-router.post('/register', async ({ request, response }) => {
-  const User = (await import('#models/user')).default
-  const data = request.only(['name', 'email', 'password'])
+/*
+|--------------------------------------------------------------------------
+| PROTECTED ROUTES (AUTH ONLY)
+|--------------------------------------------------------------------------
+*/
+router.group(() => {
+  // Events CRUD
+  router.get('/events', '#controllers/events_controller.index')
+  router.post('/events', '#controllers/events_controller.store')
+  router.get('/events/:id', '#controllers/events_controller.show')
+  router.put('/events/:id', '#controllers/events_controller.update')
+  router.delete('/events/:id', '#controllers/events_controller.destroy')
   
-  const existingUser = await User.findBy('email', data.email)
-  if (existingUser) {
-    return response.conflict({ message: 'Email sudah terdaftar' })
-  }
-
-  const user = await User.create(data)
-  return response.created({
-    message: 'User berhasil dibuat',
-    user: { id: user.id, name: user.name, email: user.email }
-  })
-})
-
-router.post('/login', async ({ request, response }) => {
-  const User = (await import('#models/user')).default
-  const { email, password } = request.only(['email', 'password'])
+  // Participants CRUD
+  router.get('/participants', '#controllers/participants_controller.index')
+  router.post('/participants', '#controllers/participants_controller.store')
+  router.get('/participants/:id', '#controllers/participants_controller.show')
+  router.put('/participants/:id', '#controllers/participants_controller.update')
+  router.delete('/participants/:id', '#controllers/participants_controller.destroy')
   
-  const user = await User.verifyCredentials(email, password)
-  if (!user) {
-    return response.unauthorized({ message: 'Email atau password salah' })
-  }
+  // Registrations CRUD
+  router.get('/registrations', '#controllers/registrations_controller.index')
+  router.post('/registrations', '#controllers/registrations_controller.store')
+  router.get('/registrations/:id', '#controllers/registrations_controller.show')
+  router.put('/registrations/:id', '#controllers/registrations_controller.update')
+  router.delete('/registrations/:id', '#controllers/registrations_controller.destroy')
+  
+}).use(middleware.auth())
 
-  const token = await User.accessTokens.create(user)
-  return response.ok({
-    message: 'Login berhasil',
-    user: { id: user.id, name: user.name, email: user.email },
-    token: token
-  })
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
+router.group(() => {
+  router.get('/admin/users', '#controllers/admin_controller.listUsers')
+  router.delete('/admin/users/:id', '#controllers/admin_controller.deleteUser')
+  
+}).use([
+  middleware.auth(),
+  middleware.role({ roles: ['admin'] })
+])
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC APIs
+|--------------------------------------------------------------------------
+*/
+router.get('/api/weather/:city', async ({ params }) => {
+  return {
+    city: params.city,
+    temperature: 28,
+    condition: 'Sunny',
+    source: 'mock'
+  }
 })
+
+router.get('/api/currency/rates', async () => {
+  return {
+    base: 'USD',
+    rates: {
+      IDR: 15500,
+      EUR: 0.92,
+      GBP: 0.79
+    },
+    source: 'mock'
+  }
+})
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOM EVENT ROUTES
+|--------------------------------------------------------------------------
+*/
+router.get('/events/location/:location', '#controllers/events_controller.byLocation')
+router.get('/events/date/:startDate/:endDate', '#controllers/events_controller.byDateRange')

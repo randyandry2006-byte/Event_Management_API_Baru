@@ -14,6 +14,9 @@ export default class Event extends BaseModel {
   @column()
   declare location?: string
 
+  @column()
+  declare createdBy: number
+
   @column.date()
   declare date: DateTime
 
