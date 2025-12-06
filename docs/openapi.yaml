@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: Event Management API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3333
+
+paths:
+  /events:
+    get:
+      summary: Get all events
+      responses:
+        '200':
+          description: Success
+
+    post:
+      summary: Create new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                date:
+                  type: string
+      responses:
+        '201':
+          description: Created
+
+  /events/{id}:
+    get:
+      summary: Get event by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success
+
+    put:
+      summary: Update event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+
+    delete:
+      summary: Delete event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
