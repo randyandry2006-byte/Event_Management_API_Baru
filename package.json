@@ -41,6 +41,7 @@
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.2.0",
     "@swc/core": "1.11.24",
+    "@types/axios": "^0.9.36",
     "@types/luxon": "^3.7.1",
     "@types/node": "^22.15.18",
     "eslint": "^9.26.0",
@@ -56,10 +57,12 @@
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.8.0",
     "@vinejs/vine": "^3.0.1",
+    "axios": "^1.13.2",
     "googleapis": "^166.0.0",
     "luxon": "^3.7.2",
     "mysql2": "^3.15.2",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "swagger-ui-dist": "^5.30.3"
   },
   "hotHook": {
     "boundaries": [

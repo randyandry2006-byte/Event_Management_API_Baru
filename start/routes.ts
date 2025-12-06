@@ -1,5 +1,9 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+import LocationController from '#controllers/location_controller'
+import HolidayController from '#controllers/holidays_controller'
+import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 
 /*
 |--------------------------------------------------------------------------
@@ -58,7 +62,7 @@ router.group(() => {
   
 }).use([
   middleware.auth(),
-  middleware.role({ roles: ['admin'] })
+  middleware.role(['admin'])
 ])
 
 /*
@@ -66,26 +70,9 @@ router.group(() => {
 | PUBLIC APIs
 |--------------------------------------------------------------------------
 */
-router.get('/api/weather/:city', async ({ params }) => {
-  return {
-    city: params.city,
-    temperature: 28,
-    condition: 'Sunny',
-    source: 'mock'
-  }
-})
+router.get('/location/search', [LocationController, 'search'])
+router.get('/holidays/:year/:country', [HolidayController, 'getHolidays'])
 
-router.get('/api/currency/rates', async () => {
-  return {
-    base: 'USD',
-    rates: {
-      IDR: 15500,
-      EUR: 0.92,
-      GBP: 0.79
-    },
-    source: 'mock'
-  }
-})
 
 /*
 |--------------------------------------------------------------------------
@@ -94,3 +81,24 @@ router.get('/api/currency/rates', async () => {
 */
 router.get('/events/location/:location', '#controllers/events_controller.byLocation')
 router.get('/events/date/:startDate/:endDate', '#controllers/events_controller.byDateRange')
+
+// Path ke swagger-ui-dist
+const SWAGGER_UI_DIST = join(process.cwd(), 'node_modules', 'swagger-ui-dist')
+
+// 1️⃣ Serve swagger-ui index.html
+router.get('/swagger-ui', async ({ response }) => {
+  const indexPath = join(SWAGGER_UI_DIST, 'index.html')
+  return response.download(indexPath)
+})
+
+// 2️⃣ Redirect /docs → swagger-ui
+router.get('/docs', async ({ response }) => {
+  return response.redirect('/swagger-ui')
+})
+
+// 3️⃣ Serve openapi.json
+router.get('/openapi.json', async ({ response }) => {
+  const jsonPath = join(process.cwd(), 'docs', 'openapi.json')
+  const output = readFileSync(jsonPath, 'utf8')
+  return response.header('content-type', 'application/json').send(output)
+})
