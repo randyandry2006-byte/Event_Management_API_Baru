@@ -59,7 +59,10 @@
     "googleapis": "^166.0.0",
     "luxon": "^3.7.2",
     "mysql2": "^3.15.2",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.2",
+    "yamljs": "^0.3.0"
   },
   "hotHook": {
     "boundaries": [
