@@ -27,11 +27,12 @@ export default class RoleMiddleware {
       allowedRoles = options.roles
     }
 
-    const user = ctx.auth?.user   // gunakan auth.user (auth middleware harus sudah dijalankan)
+    const user = ctx.authUser
 
-    if (!user) {
-      return ctx.response.unauthorized({ message: 'Unauthorized' })
-    }
+if (!user) {
+  return ctx.response.unauthorized({ message: 'Unauthorized' })
+}
+
 
     console.log('Middleware executed for user:', (user as any).id ?? 'unknown')
     console.log('Allowed roles:', allowedRoles)

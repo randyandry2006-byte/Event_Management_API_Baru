@@ -3,6 +3,8 @@ import { middleware } from '#start/kernel'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import LocationController from '#controllers/locations_controller'
+import HolidayController from '#controllers/holidays_controller'
 import YAML from 'yaml'
 
 // Setup Swagger documentation
@@ -166,6 +168,9 @@ router.get('/api/currency/rates', async () => {
     source: 'mock',
   }
 })
+router.get('/location/search', [LocationController, 'search'])
+router.get('/holidays/:year/:country', [HolidayController, 'getHolidays'])
+
 
 /*
 |--------------------------------------------------------------------------
@@ -174,3 +179,20 @@ router.get('/api/currency/rates', async () => {
 */
 router.get('/events/location/:location', '#controllers/events_controller.byLocation')
 router.get('/events/date/:startDate/:endDate', '#controllers/events_controller.byDateRange')
+
+// Path ke swagger-ui-dist
+const SWAGGER_UI_DIST = join(process.cwd(), 'node_modules', 'swagger-ui-dist')
+
+// 1️⃣ Serve swagger-ui index.html
+router.get('/swagger-ui', async ({ response }) => {
+  const indexPath = join(SWAGGER_UI_DIST, 'index.html')
+  return response.download(indexPath)
+})
+
+
+// 3️⃣ Serve openapi.json
+router.get('/openapi.json', async ({ response }) => {
+  const jsonPath = join(process.cwd(), 'docs', 'openapi.json')
+  const output = readFileSync(jsonPath, 'utf8')
+  return response.header('content-type', 'application/json').send(output)
+})

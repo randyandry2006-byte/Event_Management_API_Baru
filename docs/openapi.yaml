@@ -1,21 +1,1046 @@
 openapi: 3.0.3
+
 info:
   title: Event Management API
   version: 1.0.0
+  description: |
+    # Event Management API Documentation
+    
+    API lengkap untuk mengelola events, participants, dan registrations.
+    
+    ## Authentication
+    - Gunakan token Bearer yang didapat dari endpoint `/login`
+    - Token berlaku selama 7 hari
+    - Sertakan token di header: `Authorization: Bearer <token>`
+    
+    ## User Roles
+    - **user**: Role default untuk user biasa, bisa melihat event milik sendiri
+    - **admin**: Role khusus dengan akses penuh ke semua data
+    
+    ## Base URL
+    - Development: http://localhost:3333
 
 servers:
   - url: http://localhost:3333
+    description: Development Server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Gunakan token yang didapat dari endpoint /login
+  
+  schemas:
+    User:
+      type: object
+      description: User account information
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        role:
+          type: string
+          enum: [user, admin]
+          example: "user"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    Event:
+      type: object
+      description: Event information
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Tech Conference 2025"
+        description:
+          type: string
+          example: "Annual technology conference with keynote speakers"
+        location:
+          type: string
+          example: "Jakarta Convention Center"
+        date:
+          type: string
+          format: date-time
+          example: "2025-12-20T09:00:00Z"
+        created_by:
+          type: integer
+          example: 1
+          description: User ID yang membuat event
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    Participant:
+      type: object
+      description: Peserta event
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Jane Smith"
+        email:
+          type: string
+          format: email
+          example: "jane@example.com"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    Registration:
+      type: object
+      description: Pendaftaran peserta ke event
+      properties:
+        id:
+          type: integer
+          example: 1
+        event_id:
+          type: integer
+          example: 1
+        participant_id:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    ErrorResponse:
+      type: object
+      description: Error response
+      properties:
+        message:
+          type: string
+          example: "Email atau password salah"
+        success:
+          type: boolean
+          example: false
 
 paths:
-  /events:
+  /:
     get:
-      summary: Get all events
+      tags:
+        - System
+      summary: "Health Check - Cek Status API"
+      description: |
+        Endpoint untuk mengecek apakah API berjalan dengan baik.
+        
+        **Deskripsi:**
+        - Endpoint ini tidak memerlukan authentication
+        - Gunakan untuk monitoring dan health checks
+        - Response menunjukkan versi API dan status
+        
+        **Contoh Penggunaan:**
+        ```bash
+        curl http://localhost:3333/
+        ```
       responses:
         '200':
-          description: Success
+          description: API sedang berjalan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Event Management API"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  status:
+                    type: string
+                    example: "running"
+
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: "Register - Daftar User Baru"
+      description: |
+        Membuat akun user baru untuk menggunakan aplikasi.
+        
+        **Deskripsi:**
+        - Endpoint public, tidak perlu token
+        - Email harus unik, tidak boleh ada duplikat
+        - Password akan di-hash sebelum disimpan ke database
+        - User baru akan mendapat role 'user' secara default
+        
+        **Validasi:**
+        - Email harus format email yang valid
+        - Password minimal 6 karakter
+        - Name tidak boleh kosong
+        
+        **Contoh Response Sukses (201):**
+        ```json
+        {
+          "message": "User berhasil dibuat",
+          "user": {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john@example.com"
+          }
+        }
+        ```
+        
+        **Contoh Response Error (409):**
+        ```json
+        {
+          "message": "Email sudah terdaftar"
+        }
+        ```
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                  description: "Nama lengkap user"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                  description: "Email unik untuk login"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+                  description: "Password minimal 6 karakter"
+      responses:
+        '201':
+          description: User berhasil dibuat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '409':
+          description: Email sudah terdaftar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: "Login - Masuk ke Aplikasi"
+      description: |
+        Login menggunakan email dan password untuk mendapatkan access token.
+        
+        **Deskripsi:**
+        - Endpoint public, tidak perlu token
+        - Token berlaku selama 7 hari
+        - Simpan token dan gunakan di semua request yang memerlukan authentication
+        - Format header: `Authorization: Bearer <token>`
+        
+        **Contoh Response Sukses (200):**
+        ```json
+        {
+          "message": "Login berhasil",
+          "user": {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john@example.com",
+            "role": "user"
+          },
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+        ```
+        
+        **Contoh Response Error (401):**
+        ```json
+        {
+          "message": "Email atau password salah"
+        }
+        ```
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                  description: "Email yang terdaftar"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+                  description: "Password akun"
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    description: "JWT Token - simpan dan gunakan di semua request"
+        '401':
+          description: Email atau password salah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /events:
+    get:
+      tags:
+        - Events
+      summary: "Get All Events - Lihat Semua Event"
+      description: |
+        Mengambil daftar semua events dengan pagination.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - User biasa hanya bisa melihat event yang mereka buat
+        - Admin bisa melihat semua events
+        - Support pagination dengan parameter page dan limit
+        
+        **Permission:**
+        - Role 'user': Hanya event milik sendiri (created_by = user_id)
+        - Role 'admin': Semua events
+        
+        **Query Parameters:**
+        - `page`: Nomor halaman (default: 1)
+        - `limit`: Jumlah items per halaman (default: 20)
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "success": true,
+          "data": [
+            {
+              "id": 1,
+              "title": "Tech Conference",
+              "description": "Annual conference",
+              "location": "Jakarta",
+              "date": "2025-12-20T09:00:00Z",
+              "created_by": 1
+            }
+          ],
+          "meta": {
+            "user_role": "user",
+            "total": 10
+          }
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: "Nomor halaman (mulai dari 1)"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+          description: "Jumlah items per halaman"
+      responses:
+        '200':
+          description: Daftar events berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+                  meta:
+                    type: object
+                    properties:
+                      user_role:
+                        type: string
+                      total:
+                        type: integer
+        '401':
+          description: Unauthorized - Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     post:
-      summary: Create new event
+      tags:
+        - Events
+      summary: "Create Event - Buat Event Baru"
+      description: |
+        Membuat event baru.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Event yang dibuat akan di-assign ke user yang login (created_by)
+        - Hanya user yang membuat atau admin yang bisa edit/delete
+        
+        **Required Fields:**
+        - title: Nama/judul event
+        - description: Deskripsi singkat event
+        - location: Lokasi event
+        - date: Tanggal dan waktu event dalam format ISO 8601
+        
+        **Contoh Request:**
+        ```json
+        {
+          "title": "Tech Conference 2025",
+          "description": "Annual technology conference",
+          "location": "Jakarta Convention Center",
+          "date": "2025-12-20T09:00:00Z"
+        }
+        ```
+        
+        **Contoh Response (201):**
+        ```json
+        {
+          "success": true,
+          "message": "Event created successfully",
+          "data": {
+            "id": 1,
+            "title": "Tech Conference 2025",
+            "description": "Annual technology conference",
+            "location": "Jakarta Convention Center",
+            "date": "2025-12-20T09:00:00Z",
+            "created_by": 1
+          }
+        }
+        ```
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - location
+                - date
+              properties:
+                title:
+                  type: string
+                  example: "Tech Conference 2025"
+                  description: "Judul event"
+                description:
+                  type: string
+                  example: "Annual technology conference with keynote speakers"
+                  description: "Deskripsi event"
+                location:
+                  type: string
+                  example: "Jakarta Convention Center"
+                  description: "Lokasi event"
+                date:
+                  type: string
+                  format: date-time
+                  example: "2025-12-20T09:00:00Z"
+                  description: "Tanggal event (ISO 8601 format)"
+      responses:
+        '201':
+          description: Event berhasil dibuat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /events/{id}:
+    get:
+      tags:
+        - Events
+      summary: "Get Event Detail - Lihat Detail Event"
+      description: |
+        Mengambil detail event berdasarkan ID.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - User biasa hanya bisa melihat event milik sendiri
+        - Admin bisa melihat semua events
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "id": 1,
+          "title": "Tech Conference 2025",
+          "description": "Annual technology conference",
+          "location": "Jakarta Convention Center",
+          "date": "2025-12-20T09:00:00Z",
+          "created_by": 1,
+          "createdAt": "2025-12-01T10:00:00Z",
+          "updatedAt": "2025-12-01T10:00:00Z"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID event yang ingin dilihat"
+      responses:
+        '200':
+          description: Detail event berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Events
+      summary: "Update Event - Edit Event"
+      description: |
+        Mengupdate event berdasarkan ID.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Hanya pembuat event atau admin yang bisa edit
+        - Field apa pun bisa diupdate (semua optional)
+        
+        **Permission:**
+        - User biasa: Hanya bisa edit event milik sendiri
+        - Admin: Bisa edit event siapa saja
+        
+        **Contoh Request:**
+        ```json
+        {
+          "title": "Tech Conference 2025 - Updated",
+          "location": "Bali Convention Center",
+          "date": "2025-12-21T09:00:00Z"
+        }
+        ```
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "success": true,
+          "message": "Event updated successfully",
+          "data": {
+            "id": 1,
+            "title": "Tech Conference 2025 - Updated",
+            ...
+          }
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID event yang ingin diupdate"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: "Judul event (optional)"
+                description:
+                  type: string
+                  description: "Deskripsi event (optional)"
+                location:
+                  type: string
+                  description: "Lokasi event (optional)"
+                date:
+                  type: string
+                  format: date-time
+                  description: "Tanggal event (optional)"
+      responses:
+        '200':
+          description: Event berhasil diupdate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Tidak punya hak untuk edit event ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Events
+      summary: "Delete Event - Hapus Event"
+      description: |
+        Menghapus event berdasarkan ID.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Hanya pembuat event atau admin yang bisa delete
+        - Event yang dihapus tidak bisa dipulihkan
+        
+        **Permission:**
+        - User biasa: Hanya bisa delete event milik sendiri
+        - Admin: Bisa delete event siapa saja
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "success": true,
+          "message": "Event deleted successfully"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID event yang ingin dihapus"
+      responses:
+        '200':
+          description: Event berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Tidak punya hak untuk delete event ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /events/location/{location}:
+    get:
+      tags:
+        - Events
+      summary: "Get Events by Location - Cari Event Berdasarkan Lokasi"
+      description: |
+        Mencari events berdasarkan lokasi menggunakan fuzzy search.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Menggunakan LIKE query, jadi pencarian tidak case-sensitive
+        - Menampilkan semua events yang lokasi-nya mengandung keyword
+        
+        **Contoh:**
+        - Pencarian "Jakarta" akan menemukan:
+          - "Jakarta Convention Center"
+          - "Jakarta Hilton"
+          - "Kawasan Jakarta Pusat"
+        
+        **Contoh Response (200):**
+        ```json
+        [
+          {
+            "id": 1,
+            "title": "Tech Conference",
+            "location": "Jakarta Convention Center",
+            ...
+          }
+        ]
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: location
+          required: true
+          schema:
+            type: string
+          description: "Keyword lokasi yang dicari"
+      responses:
+        '200':
+          description: Daftar events di lokasi tersebut
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /events/date/{startDate}/{endDate}:
+    get:
+      tags:
+        - Events
+      summary: "Get Events by Date Range - Cari Event Berdasarkan Tanggal"
+      description: |
+        Mencari events dalam rentang tanggal tertentu.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Format tanggal: YYYY-MM-DD (contoh: 2025-12-01)
+        - Menampilkan semua events yang jatuh dalam range tanggal
+        
+        **Contoh:**
+        - /events/date/2025-12-01/2025-12-31
+        - Akan menampilkan semua events bulan Desember 2025
+        
+        **Contoh Response (200):**
+        ```json
+        [
+          {
+            "id": 1,
+            "title": "Tech Conference",
+            "date": "2025-12-20T09:00:00Z",
+            ...
+          }
+        ]
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: "Tanggal mulai (YYYY-MM-DD)"
+        - in: path
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: "Tanggal akhir (YYYY-MM-DD)"
+      responses:
+        '200':
+          description: Daftar events dalam range tanggal
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /participants:
+    get:
+      tags:
+        - Participants
+      summary: "Get All Participants - Lihat Semua Peserta"
+      description: |
+        Mengambil daftar semua participants.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Menampilkan semua peserta yang terdaftar di sistem
+        
+        **Contoh Response (200):**
+        ```json
+        [
+          {
+            "id": 1,
+            "name": "Jane Smith",
+            "email": "jane@example.com"
+          }
+        ]
+        ```
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Daftar semua participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Participant'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Participants
+      summary: "Create Participant - Tambah Peserta Baru"
+      description: |
+        Membuat participant baru.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Participant adalah data peserta/pendaftar event
+        - Email tidak harus unik, satu email bisa didaftarkan berkali-kali
+        
+        **Required Fields:**
+        - name: Nama peserta
+        - email: Email peserta
+        
+        **Contoh Request:**
+        ```json
+        {
+          "name": "Jane Smith",
+          "email": "jane@example.com"
+        }
+        ```
+        
+        **Contoh Response (201):**
+        ```json
+        {
+          "id": 1,
+          "name": "Jane Smith",
+          "email": "jane@example.com"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                  example: "Jane Smith"
+                  description: "Nama peserta"
+                email:
+                  type: string
+                  format: email
+                  example: "jane@example.com"
+                  description: "Email peserta"
+      responses:
+        '201':
+          description: Participant berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /participants/{id}:
+    get:
+      tags:
+        - Participants
+      summary: "Get Participant Detail - Lihat Detail Peserta"
+      description: |
+        Mengambil detail participant berdasarkan ID.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "id": 1,
+          "name": "Jane Smith",
+          "email": "jane@example.com",
+          "createdAt": "2025-12-01T10:00:00Z"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID participant yang ingin dilihat"
+      responses:
+        '200':
+          description: Detail participant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Participant tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Participants
+      summary: "Update Participant - Edit Data Peserta"
+      description: |
+        Mengupdate data participant.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Bisa mengupdate name dan/atau email
+        
+        **Contoh Request:**
+        ```json
+        {
+          "name": "Jane Smith Updated",
+          "email": "jane.updated@example.com"
+        }
+        ```
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "id": 1,
+          "name": "Jane Smith Updated",
+          "email": "jane.updated@example.com"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID participant yang ingin diupdate"
       requestBody:
         required: true
         content:
@@ -25,51 +1050,557 @@ paths:
               properties:
                 name:
                   type: string
-                date:
+                  description: "Nama peserta (optional)"
+                email:
                   type: string
-      responses:
-        '201':
-          description: Created
-
-  /events/{id}:
-    get:
-      summary: Get event by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+                  format: email
+                  description: "Email peserta (optional)"
       responses:
         '200':
-          description: Success
+          description: Participant berhasil diupdate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Participant tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-    put:
-      summary: Update event
+    delete:
+      tags:
+        - Participants
+      summary: "Delete Participant - Hapus Peserta"
+      description: |
+        Menghapus participant.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Participant yang dihapus tidak bisa dipulihkan
+        - Perlu hati-hati karena bisa menghapus data penting
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "message": "Participant berhasil dihapus"
+        }
+        ```
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: integer
+          description: "ID participant yang ingin dihapus"
+      responses:
+        '200':
+          description: Participant berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Participant tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /registrations:
+    get:
+      tags:
+        - Registrations
+      summary: "Get All Registrations - Lihat Semua Pendaftaran"
+      description: |
+        Mengambil daftar semua registrations.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Registration adalah relasi antara Event dan Participant
+        - Menampilkan data siapa saja yang terdaftar ke event mana
+        
+        **Contoh Response (200):**
+        ```json
+        [
+          {
+            "id": 1,
+            "event_id": 1,
+            "participant_id": 1,
+            "createdAt": "2025-12-01T10:00:00Z"
+          }
+        ]
+        ```
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Daftar semua registrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Registration'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Registrations
+      summary: "Create Registration - Daftarkan Peserta ke Event"
+      description: |
+        Membuat registration (mendaftarkan participant ke event).
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Registration menghubungkan participant dengan event
+        - Satu participant bisa terdaftar ke multiple events
+        - Satu event bisa memiliki multiple participants
+        
+        **Required Fields:**
+        - eventId: ID event tujuan
+        - participantId: ID participant yang didaftarkan
+        
+        **Contoh Request:**
+        ```json
+        {
+          "eventId": 1,
+          "participantId": 1
+        }
+        ```
+        
+        **Contoh Response (201):**
+        ```json
+        {
+          "id": 1,
+          "event_id": 1,
+          "participant_id": 1,
+          "createdAt": "2025-12-01T10:00:00Z"
+        }
+        ```
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - eventId
+                - participantId
+              properties:
+                eventId:
+                  type: integer
+                  example: 1
+                  description: "ID event tujuan"
+                participantId:
+                  type: integer
+                  example: 1
+                  description: "ID participant yang didaftarkan"
       responses:
-        '200':
-          description: Updated
+        '201':
+          description: Registration berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-    delete:
-      summary: Delete event
+  /registrations/{id}:
+    get:
+      tags:
+        - Registrations
+      summary: "Get Registration Detail - Lihat Detail Pendaftaran"
+      description: |
+        Mengambil detail registration berdasarkan ID.
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Menampilkan informasi peserta mana yang terdaftar ke event mana
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "id": 1,
+          "event_id": 1,
+          "participant_id": 1,
+          "createdAt": "2025-12-01T10:00:00Z"
+        }
+        ```
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: integer
+          description: "ID registration yang ingin dilihat"
       responses:
-        '204':
-          description: Deleted
+        '200':
+          description: Detail registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Registration tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Registrations
+      summary: "Delete Registration - Batalkan Pendaftaran"
+      description: |
+        Menghapus registration (membatalkan pendaftaran peserta ke event).
+        
+        **Deskripsi:**
+        - Memerlukan authentication token
+        - Menghapus relasi antara participant dan event
+        - Jika pembatalan, peserta bisa mendaftar ulang
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "message": "Registration berhasil dihapus"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID registration yang ingin dihapus"
+      responses:
+        '200':
+          description: Registration berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Registration tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: "Get All Users (Admin Only) - Lihat Semua User"
+      description: |
+        Mengambil daftar semua users. **ADMIN ONLY**
+        
+        **Deskripsi:**
+        - Memerlukan authentication token dengan role 'admin'
+        - Menampilkan semua user yang terdaftar di sistem
+        - User biasa TIDAK bisa akses endpoint ini
+        
+        **Permission:**
+        - Hanya admin yang bisa mengakses
+        - User biasa akan mendapat error 403 Forbidden
+        
+        **Contoh Response (200):**
+        ```json
+        [
+          {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john@example.com",
+            "role": "user"
+          },
+          {
+            "id": 2,
+            "name": "Admin User",
+            "email": "admin@example.com",
+            "role": "admin"
+          }
+        ]
+        ```
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Daftar semua users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Hanya admin yang bisa akses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users/{id}:
+    delete:
+      tags:
+        - Admin
+      summary: "Delete User (Admin Only) - Hapus User"
+      description: |
+        Menghapus user. **ADMIN ONLY**
+        
+        **Deskripsi:**
+        - Memerlukan authentication token dengan role 'admin'
+        - Menghapus user dan semua data terkait
+        - User biasa TIDAK bisa akses endpoint ini
+        - User yang dihapus tidak bisa dipulihkan
+        
+        **Permission:**
+        - Hanya admin yang bisa menghapus user
+        - Tidak bisa menghapus user sendiri (admin)
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "message": "User deleted successfully"
+        }
+        ```
+        
+        **Contoh Response Error (403):**
+        ```json
+        {
+          "message": "Forbidden - Admin access required"
+        }
+        ```
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "ID user yang ingin dihapus"
+      responses:
+        '200':
+          description: User berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Invalid ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Hanya admin yang bisa akses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/weather/{city}:
+    get:
+      tags:
+        - External APIs
+      summary: "Get Weather Data (Mock) - Data Cuaca"
+      description: |
+        Mengambil data cuaca untuk kota tertentu (mock data).
+        
+        **Deskripsi:**
+        - Endpoint public, tidak perlu authentication
+        - Data adalah mock/dummy, bukan data real
+        - Gunakan untuk testing atau UI demo
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "city": "Jakarta",
+          "temperature": 28,
+          "condition": "Sunny",
+          "source": "mock"
+        }
+        ```
+      security: []
+      parameters:
+        - in: path
+          name: city
+          required: true
+          schema:
+            type: string
+          description: "Nama kota yang dicari"
+      responses:
+        '200':
+          description: Data cuaca
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  city:
+                    type: string
+                    example: "Jakarta"
+                  temperature:
+                    type: number
+                    example: 28
+                  condition:
+                    type: string
+                    example: "Sunny"
+                  source:
+                    type: string
+                    example: "mock"
+
+  /api/currency/rates:
+    get:
+      tags:
+        - External APIs
+      summary: "Get Currency Rates (Mock) - Nilai Tukar Mata Uang"
+      description: |
+        Mengambil nilai tukar mata uang (mock data).
+        
+        **Deskripsi:**
+        - Endpoint public, tidak perlu authentication
+        - Data adalah mock/dummy, bukan data real
+        - Base currency adalah USD
+        - Gunakan untuk testing atau UI demo
+        
+        **Contoh Response (200):**
+        ```json
+        {
+          "base": "USD",
+          "rates": {
+            "IDR": 15500,
+            "EUR": 0.92,
+            "GBP": 0.79
+          },
+          "source": "mock"
+        }
+        ```
+      security: []
+      responses:
+        '200':
+          description: Nilai tukar mata uang
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base:
+                    type: string
+                    example: "USD"
+                  rates:
+                    type: object
+                    properties:
+                      IDR:
+                        type: number
+                        example: 15500
+                      EUR:
+                        type: number
+                        example: 0.92
+                      GBP:
+                        type: number
+                        example: 0.79
+                  source:
+                    type: string
+                    example: "mock"
+
+  /docs:
+    get:
+      tags:
+        - Documentation
+      summary: "Swagger UI - Dokumentasi Interaktif"
+      description: |
+        Halaman dokumentasi API interaktif menggunakan Swagger UI.
+        
+        **Deskripsi:**
+        - Buka di browser untuk melihat dokumentasi interaktif
+        - Bisa test semua endpoint langsung dari halaman ini
+        - Semua endpoint dan parameter terdokumentasi dengan jelas
+        
+        **URL:**
+        - http://localhost:3333/docs
+      security: []
+      responses:
+        '200':
+          description: Swagger UI HTML page
